@@ -1,6 +1,6 @@
 /* TODO: import Note, Metronome, etc. */
 
-function Box({ val, isSelected, selectColor /*, hasSignal, signalDirection */ }) {
+function Box({ val, isSelected, selectColor }) {
   return (
     <>
       <div
