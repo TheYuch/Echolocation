@@ -93,7 +93,7 @@ const setNextSignals = (todoSignals, copy, r, c) => {
   copy[r][c].signals = [];
 }
 
-function Matrix() {
+function Matrix({ delay }) {
   const [ticks, setTicks] = useState(0);
 
   const [matrix, setMatrix] = useState(initializeMatrix());
@@ -136,11 +136,19 @@ function Matrix() {
           notesToPlay.push(val.note.toUpperCase() + val.accidental + val.octave);
           lengthsToPlay.push(0.25); // TODO: need variable note lengths
         } else if (signal.type === 'noteAdjuster') {
-          let note = copy[r][c].val.note;
-          let index = Constants.NOTES_STRING.indexOf(note);
-          index = (index + 1) % Constants.NOTES_STRING.length;
-          note = Constants.NOTES_STRING.charAt(index);
-          copy[r][c].val.note = note;
+          let noteWithAccidental = copy[r][c].val.note.toUpperCase() + copy[r][c].val.accidental;
+          let index = -1;
+          if (Constants.SCALE_SHARPS.includes(noteWithAccidental)) {
+            index = Constants.SCALE_SHARPS.indexOf(noteWithAccidental);
+            index = (index + 1) % Constants.SCALE_SHARPS.length;
+            noteWithAccidental = Constants.SCALE_SHARPS[index];
+          } else {
+            index = Constants.SCALE_FLATS.indexOf(noteWithAccidental);
+            index = (index + 1) % Constants.SCALE_FLATS.length;
+            noteWithAccidental = Constants.SCALE_FLATS[index];
+          }
+          copy[r][c].val.note = noteWithAccidental.charAt(0).toLowerCase();
+          copy[r][c].val.accidental = noteWithAccidental.charAt(1);
         }
       }
     }
@@ -196,9 +204,9 @@ function Matrix() {
         }
       } else { // Accidentals, etc.
         if (newCell.type === 'note') {
-          if (c === '+') {
+          if (c === '+' && Constants.NOTES_WITH_SHARPS.includes(newCell.val.note.toUpperCase())) {
             newCell.val.accidental = '#';
-          } else if (c === '-') {
+          } else if (c === '-' && Constants.NOTES_WITH_FLATS.includes(newCell.val.note.toUpperCase())) {
             newCell.val.accidental = 'b';
           }
         }
@@ -211,7 +219,7 @@ function Matrix() {
   useInterval(() => { // Main clock function, BPM later set by user TODO
     handleMatrixUpdate();
     setTicks(ticks + 1);
-  }, Constants.MS_PER_TICK);
+  }, delay < 500 ? 100 : (delay < 1000 ? 500 : (delay < 1500 ? 1000 : (delay < 2000 ? 1500 : 2000)))); // TODO: don't know why this is the only way for variable intervals
 
   return (
     <>
