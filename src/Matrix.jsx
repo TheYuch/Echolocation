@@ -13,7 +13,7 @@ const initializeMatrix = () => {
       matrix[r][c] = {
         type: '',
         val: {},
-        signalDirection: '',
+        signals: [], // each item in a signal is { type: '', direction: '' }
       };
     }
   }
@@ -35,7 +35,7 @@ const MatrixTable = ({ matrix, selectedRow, selectedColumn, handleClickCell }) =
             type={matrix[r][c].type}
             val={matrix[r][c].val}
             isSelected={r == selectedRow && c == selectedColumn}
-            hasSignal={matrix[r][c].signalDirection !== ''}
+            hasSignal={matrix[r][c].signals.length > 0} // TODO: different color for each type of signal
           />
         </td>
       );
@@ -48,40 +48,49 @@ const MatrixTable = ({ matrix, selectedRow, selectedColumn, handleClickCell }) =
 
 const handleMetronome = (val, copy, r, c, ticks) => {
   if (ticks % val.ticksPerBeat === 0) {
-    copy[r][c].signalDirection = 'e'; // TODO - use val.direction later
+    copy[r][c].signals.push({
+      type: 'metronome',
+      direction: 'e', // TODO - use val.direction later
+    });
   }
 };
 
 const handleNoteAdjuster = (val, copy, r, c, ticks) => {
   if (ticks % val.ticksPerBeat === 0) {
-    copy[r][c].signalDirection = 's';
+    copy[r][c].signals.push({
+      type: 'noteAdjuster',
+      direction: 's', // TODO - use val.direction later
+    });
   }
 }
 
 const setNextSignals = (todoSignals, copy, r, c) => {
-  switch (copy[r][c].signalDirection) {
-    case 'e':
-      if (c + 1 < Constants.MATRIX_LENGTH) {
-        todoSignals.push([r, c + 1, 'e']);
-      }
-      break;
-    case 'w':
-      if (c - 1 >= 0) {
-        todoSignals.push([r, c - 1, 'w']);
-      }
-      break;
-    case 'n':
-      if (r - 1 >= 0) {
-        todoSignals.push([r - 1, c, 'n']);
-      }
-      break;
-    case 's':
-      if (r + 1 < Constants.MATRIX_LENGTH) {
-        todoSignals.push([r + 1, c, 's']);
-      }
-      break;
+  for (let i = 0; i < copy[r][c].signals.length; i++) {
+    const currSignal = copy[r][c].signals[i];
+    switch (currSignal.direction) {
+      case 'e':
+        if (c + 1 < Constants.MATRIX_LENGTH) {
+          todoSignals.push([r, c + 1, currSignal]);
+        }
+        break;
+      case 'w':
+        if (c - 1 >= 0) {
+          todoSignals.push([r, c - 1, currSignal]);
+        }
+        break;
+      case 'n':
+        if (r - 1 >= 0) {
+          todoSignals.push([r - 1, c, currSignal]);
+        }
+        break;
+      case 's':
+        if (r + 1 < Constants.MATRIX_LENGTH) {
+          todoSignals.push([r + 1, c, currSignal]);
+        }
+        break;
+    }
   }
-  copy[r][c].signalDirection = '';
+  copy[r][c].signals = [];
 }
 
 function Matrix() {
@@ -113,14 +122,22 @@ function Matrix() {
 
     // Propagating signals
     for (let i = 0; i < todoSignals.length; i++) {
-      const [r, c, dir] = todoSignals[i];
-      copy[r][c].signalDirection = dir;
+      const [r, c, signal] = todoSignals[i];
+      copy[r][c].signals.push(signal);
 
-      // Play sounds
-      if (copy[r][c].type === 'note' && copy[r][c].signalDirection !== '') {
-        const val = copy[r][c].val;
-        const synth = new Tone.Synth().toDestination(); // TODO: use polysynth
-        synth.triggerAttackRelease(val.note.toUpperCase() + val.octave, '4n'); // TODO: need variable note lengths
+      // Handle signal types
+      if (copy[r][c].type === 'note') {
+        if (signal.type === 'metronome') {
+          const val = copy[r][c].val;
+          const synth = new Tone.Synth().toDestination(); // TODO: use polysynth
+          synth.triggerAttackRelease(val.note.toUpperCase() + val.octave, '4n'); // TODO: need variable note lengths
+        } else if (signal.type === 'noteAdjuster') {
+          let note = copy[r][c].val.note;
+          let index = Constants.NOTES_STRING.indexOf(note);
+          index = (index + 1) % Constants.NOTES_STRING.length;
+          note = Constants.NOTES_STRING.charAt(index);
+          copy[r][c].val.note = note;
+        }
       }
     }
 
