@@ -1,11 +1,11 @@
 import './App.css'
-import Create from './Create.jsx'
+import Matrix from './Matrix.jsx'
 
 function App() {
   return (
     <>
-      <h1>Echolocation</h1>
-      <Create />
+      <h1 id='title'>Echolocation</h1>
+      <Matrix />
     </>
   )
 }
