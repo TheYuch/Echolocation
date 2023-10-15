@@ -22,6 +22,8 @@ export const CELL_SIGNAL_COLORS = {
 };
 export const CELL_SELECT_COLOR = 'lightblue'; // TODO make it flash
 export const CELL_NOTE_DEFAULT_OCTAVE = 4;
+export const CELL_NOTE_DEFAULT_INSTRUMENT = 'synth';
+export const CELL_NOTE_INSTRUMENTS = ['amsynth', 'duosynth', 'fmsynth', 'membranesynth', 'metalsynth', 'monosynth', 'noisesynth', 'plucksynth', 'synth'];
 export const CELL_METRONOME_DEFAULT_TICKSPERBEAT = 4;
 export const CELL_NOTEADJUSTER_DEFAULT_TICKSPERBEAT = 4;
 

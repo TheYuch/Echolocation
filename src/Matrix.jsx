@@ -31,21 +31,45 @@ const MatrixTable = ({ matrix, selectedRow, selectedColumn, handleClickCell }) =
   return <table><tbody>{tr}</tbody></table>;
 };
 
+const initializePolySynths = () => { // TODO: do from server instead of in client
+  return {
+    "amsynth": new Tone.PolySynth(Tone.AMSynth).toDestination(),
+    "duosynth": new Tone.PolySynth(Tone.DuoSynth).toDestination(),
+    "fmsynth": new Tone.PolySynth(Tone.FMSynth).toDestination(),
+    "membranesynth": new Tone.PolySynth(Tone.MembraneSynth).toDestination(),
+    "metalsynth": new Tone.PolySynth(Tone.MetalSynth).toDestination(),
+    "monosynth": new Tone.PolySynth(Tone.MonoSynth).toDestination(),
+    "noisesynth": new Tone.PolySynth(Tone.NoiseSynth).toDestination(),
+    "plucksynth": new Tone.PolySynth(Tone.PluckSynth).toDestination(),
+    "synth": new Tone.PolySynth(Tone.Synth).toDestination(),
+  };
+}
+
+const polySynths = initializePolySynths();
+
 function Matrix({ delay }) {
   const [matrix, setMatrix] = React.useState(null);
   const [selectedRow, setSelectedRow] = React.useState(-1);
   const [selectedColumn, setSelectedColumn] = React.useState(-1);
 
-  const [synth, setSynth] = React.useState(new Tone.PolySynth().toDestination());
-
   const handleMatrixChanged = (newMatrix) => {
     setMatrix(newMatrix);
   };
 
-  const handlePlaySounds = ({ notesToPlay, lengthsToPlay }) => {
-    if (notesToPlay.length > 0) {
-      synth.set({ detune: -1200 });
-      synth.triggerAttackRelease(notesToPlay, lengthsToPlay);
+  const handlePlaySounds = (soundsToPlay) => {
+    for (const instrument in soundsToPlay) {
+      if (soundsToPlay[instrument]['notes'].length === 0) {
+        continue;
+      }
+
+      /*
+      TODO: some instruments broken
+      - NoiseSynth (&) is broken
+      - PluckSynth (*) is broken
+      */
+
+      polySynths[instrument].set({ detune: -1200 });
+      polySynths[instrument].triggerAttackRelease(soundsToPlay[instrument]['notes'], soundsToPlay[instrument]['lengths']);
     }
   };
 
@@ -94,6 +118,7 @@ function Matrix({ delay }) {
             note: c,
             octave: Constants.CELL_NOTE_DEFAULT_OCTAVE,
             accidental: '',
+            instrument: Constants.CELL_NOTE_DEFAULT_INSTRUMENT,
           };
         } else if (c === 'm') {
           newCell.type = 'metronome';
@@ -112,6 +137,16 @@ function Matrix({ delay }) {
             newCell.val.accidental = '#';
           } else if (c === '-' && Constants.NOTES_WITH_FLATS.includes(newCell.val.note.toUpperCase())) {
             newCell.val.accidental = 'b';
+          } else { // Instruments setting: !@#$%^&*(
+            if (c === '!') newCell.val.instrument = Constants.CELL_NOTE_INSTRUMENTS[0];
+            else if (c === '@') newCell.val.instrument = Constants.CELL_NOTE_INSTRUMENTS[1];
+            else if (c === '#') newCell.val.instrument = Constants.CELL_NOTE_INSTRUMENTS[2];
+            else if (c === '$') newCell.val.instrument = Constants.CELL_NOTE_INSTRUMENTS[3];
+            else if (c === '%') newCell.val.instrument = Constants.CELL_NOTE_INSTRUMENTS[4];
+            else if (c === '^') newCell.val.instrument = Constants.CELL_NOTE_INSTRUMENTS[5];
+            else if (c === '&') newCell.val.instrument = Constants.CELL_NOTE_INSTRUMENTS[6];
+            else if (c === '*') newCell.val.instrument = Constants.CELL_NOTE_INSTRUMENTS[7];
+            else if (c === '(') newCell.val.instrument = Constants.CELL_NOTE_INSTRUMENTS[8];
           }
         }
       }

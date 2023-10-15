@@ -22,13 +22,13 @@ function App() {
   return (
     <>
       <h1 id='title'>Echolocation</h1>
-      <p>Adjust update delay:</p>
+      {/* <p>Adjust update delay:</p> // TODO - add back when server side implements adjustable delay socket.io emits
       <Slider
         delay={delay}
         handleChange={(newDelay) => setDelay(newDelay)}
       />
       <br />
-      <br />
+      <br /> */}
       <Matrix delay={delay} />
     </>
   )

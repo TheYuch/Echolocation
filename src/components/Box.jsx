@@ -1,5 +1,17 @@
 import * as Constants from '../utils/Constants.jsx';
 
+const instrumentSymbols = { // TODO: find better way to display instruments instead of char symbols
+  amsynth: '!',
+  duosynth: '@',
+  fmsynth: '#',
+  membranesynth: '$',
+  metalsynth: '%',
+  monosynth: '^',
+  noisesynth: '&',
+  plucksynth: '*',
+  synth: '('
+};
+
 function Box({ type, val, signals, isSelected }) {
   let bold = false;
   let text = ''; // used for type === ''
@@ -24,6 +36,8 @@ function Box({ type, val, signals, isSelected }) {
     }
   }
 
+  let instrumentSymbol = instrumentSymbols[val.instrument];
+
   return (
     <>
       <div
@@ -35,6 +49,7 @@ function Box({ type, val, signals, isSelected }) {
         }}
       >
         {text}
+        {instrumentSymbol}
       </div>
     </>
   )
