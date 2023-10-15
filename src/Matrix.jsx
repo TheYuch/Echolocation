@@ -101,9 +101,21 @@ function Matrix() {
 
     let newCell = matrix[selectedRow][selectedColumn];
     c = c.toLowerCase();
-    if (c === 'backspace') { // Special character: backspace
+    if (c === 'backspace') { // Backspace for deletion
       newCell.type = '';
       newCell.val = {};
+    } else if (c === 'arrowleft') { // Arrows for redirectors
+      newCell.type = 'redirector';
+      newCell.val = { direction: 'w' };
+    } else if (c === 'arrowright') {
+      newCell.type = 'redirector';
+      newCell.val = { direction: 'e' };
+    } else if (c === 'arrowup') {
+      newCell.type = 'redirector';
+      newCell.val = { direction: 'n' };
+    } else if (c === 'arrowdown') {
+      newCell.type = 'redirector';
+      newCell.val = { direction: 's' };
     } else if (c.length === 1) {
       if (!isNaN(c)) { // Single-char number
         if (newCell.type === 'note') {

@@ -23,6 +23,16 @@ function Box({ type, val, signals, isSelected }) {
     text = 'N' + val.ticksPerBeat;
   } else if (type === 'note') {
     text = val.note.toUpperCase() + val.accidental + val.octave;
+  } else if (type === 'redirector') {
+    if (val.direction === 'w') {
+      text = '\u2190';
+    } else if (val.direction === 'e') {
+      text = '\u2192';
+    } else if (val.direction === 'n') {
+      text = '\u2191';
+    } else if (val.direction === 's') {
+      text = '\u2193';
+    }
   }
 
   let color = 'transparent';
