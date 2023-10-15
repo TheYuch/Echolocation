@@ -34,8 +34,8 @@ const MatrixTable = ({ matrix, selectedRow, selectedColumn, handleClickCell }) =
           <Box
             type={matrix[r][c].type}
             val={matrix[r][c].val}
+            signals={matrix[r][c].signals}
             isSelected={r == selectedRow && c == selectedColumn}
-            hasSignal={matrix[r][c].signals.length > 0} // TODO: different color for each type of signal
           />
         </td>
       );
@@ -100,6 +100,8 @@ function Matrix() {
   const [selectedRow, setSelectedRow] = useState(-1);
   const [selectedColumn, setSelectedColumn] = useState(-1);
 
+  const [synth, setSynth] = useState(new Tone.PolySynth().toDestination());
+
   const handleMatrixUpdate = () => {
     let copy = [...matrix];
     let todoSignals = [];
@@ -121,6 +123,8 @@ function Matrix() {
     }
 
     // Propagating signals
+    let notesToPlay = [];
+    let lengthsToPlay = [];
     for (let i = 0; i < todoSignals.length; i++) {
       const [r, c, signal] = todoSignals[i];
       copy[r][c].signals.push(signal);
@@ -129,8 +133,8 @@ function Matrix() {
       if (copy[r][c].type === 'note') {
         if (signal.type === 'metronome') {
           const val = copy[r][c].val;
-          const synth = new Tone.Synth().toDestination(); // TODO: use polysynth
-          synth.triggerAttackRelease(val.note.toUpperCase() + val.octave, '4n'); // TODO: need variable note lengths
+          notesToPlay.push(val.note.toUpperCase() + val.accidental + val.octave);
+          lengthsToPlay.push(0.25); // TODO: need variable note lengths
         } else if (signal.type === 'noteAdjuster') {
           let note = copy[r][c].val.note;
           let index = Constants.NOTES_STRING.indexOf(note);
@@ -139,6 +143,12 @@ function Matrix() {
           copy[r][c].val.note = note;
         }
       }
+    }
+
+    // Play notes
+    if (notesToPlay.length > 0) {
+      synth.set({ detune: -1200 });
+      synth.triggerAttackRelease(notesToPlay, lengthsToPlay);
     }
 
     setMatrix(copy);
@@ -162,27 +172,35 @@ function Matrix() {
       if (!isNaN(c)) { // Single-char number
         if (newCell.type === 'note') {
           newCell.val.octave = parseInt(c);
-        } else if (newCell.type === 'metronome') {
+        } else if (newCell.type === 'metronome' || newCell.type === 'noteAdjuster') {
           newCell.val.ticksPerBeat = parseInt(c);
         }
-      } else { // Single-char alphabet
+      } else if (c.match(/[a-z]/i)) { // Single-char alphabet
         if (c.match(/[a-g]/i)) {
           newCell.type = 'note';
           newCell.val = {
             note: c,
-            octave: 4,
+            octave: Constants.CELL_NOTE_DEFAULT_OCTAVE,
             accidental: '',
           };
         } else if (c === 'm') {
           newCell.type = 'metronome';
           newCell.val = {
-            ticksPerBeat: 4,
+            ticksPerBeat: Constants.CELL_METRONOME_DEFAULT_TICKSPERBEAT,
           };
         } else if (c === 'n') {
           newCell.type = 'noteAdjuster';
           newCell.val = {
-            ticksPerBeat: 4,
+            ticksPerBeat: Constants.CELL_NOTEADJUSTER_DEFAULT_TICKSPERBEAT,
           };
+        }
+      } else { // Accidentals, etc.
+        if (newCell.type === 'note') {
+          if (c === '+') {
+            newCell.val.accidental = '#';
+          } else if (c === '-') {
+            newCell.val.accidental = 'b';
+          }
         }
       }
     }

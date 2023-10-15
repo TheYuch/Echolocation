@@ -1,8 +1,6 @@
-/* TODO: import Note, Metronome, etc. */
-
 import * as Constants from '../utils/Constants.jsx';
 
-function Box({ type, val, hasSignal, isSelected }) {
+function Box({ type, val, signals, isSelected }) {
   let bold = false;
   let text = ''; // used for type === ''
   if (type === 'metronome') {
@@ -16,14 +14,14 @@ function Box({ type, val, hasSignal, isSelected }) {
   }
 
   let color = 'transparent';
-  if (hasSignal) {
-    if (type === 'note') {
-      color = Constants.CELL_ACTIVATE_COLOR;
-    } else {
-      color = Constants.CELL_SIGNAL_COLOR;
-    }
-  } else if (isSelected) {
+  if (isSelected) {
     color = Constants.CELL_SELECT_COLOR;
+  } else if (signals.length > 0) {
+    if (type === 'note') {
+      color = Constants.CELL_NOTE_COLORS[val.note];
+    } else { // TODO: for each signal, mix the color together instead of just representing the first signal in the list of signals
+      color = Constants.CELL_SIGNAL_COLORS[signals[0].type];
+    }
   }
 
   return (
