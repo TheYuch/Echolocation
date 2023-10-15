@@ -1,7 +1,7 @@
 import React from 'react';
 import './Matrix.css';
 import * as Constants from './utils/Constants.jsx';
-import { useKeyDown, useInterval } from './utils/CustomHooks';
+import { useKeyDown } from './utils/CustomHooks';
 import Box from './components/Box.jsx';
 import * as Tone from 'tone';
 import { socket } from './contexts/Socket.jsx';
@@ -47,7 +47,7 @@ const initializePolySynths = () => { // TODO: do from server instead of in clien
 
 const polySynths = initializePolySynths();
 
-function Matrix({ delay }) {
+function Matrix() {
   const [matrix, setMatrix] = React.useState(null);
   const [selectedRow, setSelectedRow] = React.useState(-1);
   const [selectedColumn, setSelectedColumn] = React.useState(-1);
@@ -73,10 +73,10 @@ function Matrix({ delay }) {
     }
   };
 
-  const handleRequestMatrixChange = (row, column, value) => {
+  const handleRequestCellChange = (row, column, value) => {
     if (row < 0 || row >= Constants.MATRIX_LENGTH || column < 0 || column >= Constants.MATRIX_LENGTH)
       return;
-    socket.emit('requestMatrixChange', { roomCode: 1234, row, column, value });
+    socket.emit('requestCellChange', { roomCode: 1234, row, column, value });
     // Matrix state is updated locally successfully iff the server receives and emits back an updated matrix 
   };
 
@@ -152,7 +152,7 @@ function Matrix({ delay }) {
       }
     }
 
-    handleRequestMatrixChange(selectedRow, selectedColumn, newCell);
+    handleRequestCellChange(selectedRow, selectedColumn, newCell);
   });
 
   return (
