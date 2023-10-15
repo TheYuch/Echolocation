@@ -31,9 +31,9 @@ const MatrixTable = ({ matrix, selectedRow, selectedColumn, handleClickCell }) =
           onClick={() => handleClickCell(r,c)}
         >
           <Box
-            val={matrix[r][c].val + "||" + matrix[r][c].signalDirection}
+            val={matrix[r][c].val}
             isSelected={r == selectedRow && c == selectedColumn}
-            selectColor={Constants.CELL_SELECT_COLOR}
+            hasSignal={matrix[r][c].signalDirection !== ''}
           />
         </td>
       );
@@ -45,7 +45,7 @@ const MatrixTable = ({ matrix, selectedRow, selectedColumn, handleClickCell }) =
 };
 
 const handleMetronome = (val, copy, r, c, ticks) => {
-  const secondChar = 2;//val.charAt(1); TODO
+  const secondChar = 4;//val.charAt(1); TODO
   if (isNaN(secondChar))
     return;
   const ticksPerBeat = +secondChar;
@@ -116,7 +116,7 @@ function Matrix() {
       const type = val.charAt(0);
       if (type.match(/[a-g]/i) && copy[r][c].signalDirection !== '') {
         const synth = new Tone.Synth().toDestination();
-        synth.triggerAttackRelease(type.toUpperCase() + '4', '8n'); // TODO: temporary octave!!!!!!!!!!!!!!!! #anshulshah
+        synth.triggerAttackRelease(type.toUpperCase() + '4', '4n'); // TODO: temporary octave!!!!!!!!!!!!!!!! #anshulshah
       }
     }
 

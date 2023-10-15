@@ -2,5 +2,18 @@ td {
     width: 4rem;
     height: 4rem;
     background-color: transparent;
-    border: solid white 1px;
+    margin: 6px;
+    border: solid 1px rgb(189, 189, 189);
+    border-radius: 5px;
+    box-shadow: 1px 1px 10px rgba(113, 113, 113, 0.739);
+}
+
+td div {
+    border-radius: 2px;
+    line-height: 4rem;
+    font-size: 1.5rem;
+}
+
+table {
+    border-radius: 5px;
 }
