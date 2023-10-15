@@ -28,7 +28,7 @@ const MatrixTable = ({ matrix, selectedRow, selectedColumn, handleClickCell }) =
       td.push(
         <td
           key={`${r},${c}`}
-          onClick={() => handleClickCell(r,c)}
+          onClick={() => handleClickCell(r, c)}
         >
           <Box
             val={matrix[r][c].val}
@@ -40,12 +40,15 @@ const MatrixTable = ({ matrix, selectedRow, selectedColumn, handleClickCell }) =
     }
     tr.push(<tr key={r}>{td}</tr>);
   }
-  
+
   return <table><tbody>{tr}</tbody></table>;
 };
 
 const handleMetronome = (val, copy, r, c, ticks) => {
-  const secondChar = 4;//val.charAt(1); TODO
+  let secondChar = Constants.METRO_DEFAULT;
+  if (val.length == 2) {
+    secondChar = val.charAt(1);
+  }
   if (isNaN(secondChar))
     return;
   const ticksPerBeat = +secondChar;
@@ -55,7 +58,7 @@ const handleMetronome = (val, copy, r, c, ticks) => {
 };
 
 const setNextSignals = (todoSignals, copy, r, c) => {
-  switch(copy[r][c].signalDirection) {
+  switch (copy[r][c].signalDirection) {
     case 'e':
       if (c + 1 < Constants.MATRIX_LENGTH) {
         todoSignals.push([r, c + 1, 'e']);
@@ -112,49 +115,61 @@ function Matrix() {
       copy[r][c].signalDirection = dir;
 
       // Play sounds
-      const val = copy[r][c].val.toLowerCase();
-      const type = val.charAt(0);
-      if (type.match(/[a-g]/i) && copy[r][c].signalDirection !== '') {
-        const synth = new Tone.Synth().toDestination();
-        synth.triggerAttackRelease(type.toUpperCase() + '4', '4n'); // TODO: temporary octave!!!!!!!!!!!!!!!! #anshulshah
+      const val = copy[r][c].val;
+      const type = val.charAt(0).toLowerCase();
+      let octave = 4;
+      if (val.length == 2) {
+        octave = val.charAt(1);
       }
-    }
+  if (type.match(/[a-g]/i) && copy[r][c].signalDirection !== '') {
+    const synth = new Tone.Synth().toDestination();
+    synth.triggerAttackRelease(type.toUpperCase() + octave, '4n'); // TODO: temporary note !!!!!!!!!!!!!!!! #anshulshah
+  }
+}
 
-    setMatrix(copy);
+setMatrix(copy);
   };
 
-  const handleMatrixChange = (row, column, value) => {
-    if (row < 0 || row > Constants.MATRIX_LENGTH || column < 0 || column > Constants.MATRIX_LENGTH)
-      return;
-    let copy = [...matrix];
-    copy[row][column] = value;
-    setMatrix(copy);
-  };
+const handleMatrixChange = (row, column, value) => {
+  if (row < 0 || row > Constants.MATRIX_LENGTH || column < 0 || column > Constants.MATRIX_LENGTH)
+    return;
+  let copy = [...matrix];
+  copy[row][column] = value;
+  setMatrix(copy);
+};
 
   useKeyDown((c) => {
-    let newCell = matrix[selectedRow][selectedColumn];
+  let newCell = matrix[selectedRow][selectedColumn];
+    if (newCell.val.length > 0 && (/^\d$/).test(c) &&
+      (newCell.val.charAt(0).toLowerCase().match(/[a-g]/i) ||
+        newCell.val.charAt(0).toLowerCase() === 'm')) {
+    newCell.val = newCell.val.charAt(0) + c;
+  } else if (c.match(/[a-z]/i) && c.length == 1) {
     newCell.val = c;
-    handleMatrixChange(selectedRow, selectedColumn, newCell);
-  });
+  } else if (c.toLowerCase() === 'backspace') {
+    newCell.val = '';
+  }
+  handleMatrixChange(selectedRow, selectedColumn, newCell);
+});
 
-  useInterval(() => { // Main clock function, BPM later set by user TODO
-    handleMatrixUpdate();
-    setTicks(ticks + 1);
-  }, Constants.MS_PER_TICK);
-  
-  return (
-    <>
-      <MatrixTable
-        matrix={matrix}
-        selectedRow={selectedRow}
-        selectedColumn={selectedColumn}
-        handleClickCell={(r, c) => {
-          setSelectedRow(r);
-          setSelectedColumn(c);
-        }}
-      />
-    </>
-  );
+useInterval(() => { // Main clock function, BPM later set by user TODO
+  handleMatrixUpdate();
+  setTicks(ticks + 1);
+}, Constants.MS_PER_TICK);
+
+return (
+  <>
+    <MatrixTable
+      matrix={matrix}
+      selectedRow={selectedRow}
+      selectedColumn={selectedColumn}
+      handleClickCell={(r, c) => {
+        setSelectedRow(r);
+        setSelectedColumn(c);
+      }}
+    />
+  </>
+);
 };
 
 

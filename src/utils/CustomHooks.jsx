@@ -1,16 +1,19 @@
 import React from "react";
 
 const isAlphabet = (c) => c.length == 1 && c.match(/[a-z]/i);
+const isNumber = (c) => c.length == 1 && (/^\d$/.test(c));
 
 export const useKeyDown = (callback) => {
     const onKeyDown = (event) => {
-        const wasValidKeyPressed = isAlphabet(event.key);
-        if (wasValidKeyPressed) {
+        if (isAlphabet(event.key)) {
             event.preventDefault();
             callback(event.key.toUpperCase());
+        } else if (isNumber(event.key)) {
+            event.preventDefault();
+            callback(parseInt(event.key, 10));
         } else if (event.key.toLowerCase() == 'backspace') {
             event.preventDefault();
-            callback('');
+            callback(event.key.toLowerCase());
         }
     };
     React.useEffect(() => {
