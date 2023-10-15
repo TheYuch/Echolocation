@@ -11,7 +11,8 @@ const initializeMatrix = () => {
     matrix[r] = [];
     for (let c = 0; c < Constants.MATRIX_LENGTH; c++) {
       matrix[r][c] = {
-        val: '',
+        type: '',
+        val: {},
         signalDirection: '',
       };
     }
@@ -31,6 +32,7 @@ const MatrixTable = ({ matrix, selectedRow, selectedColumn, handleClickCell }) =
           onClick={() => handleClickCell(r, c)}
         >
           <Box
+            type={matrix[r][c].type}
             val={matrix[r][c].val}
             isSelected={r == selectedRow && c == selectedColumn}
             hasSignal={matrix[r][c].signalDirection !== ''}
@@ -45,17 +47,16 @@ const MatrixTable = ({ matrix, selectedRow, selectedColumn, handleClickCell }) =
 };
 
 const handleMetronome = (val, copy, r, c, ticks) => {
-  let secondChar = Constants.METRO_DEFAULT;
-  if (val.length == 2) {
-    secondChar = val.charAt(1);
-  }
-  if (isNaN(secondChar))
-    return;
-  const ticksPerBeat = +secondChar;
-  if (ticks % ticksPerBeat === 0) {
-    copy[r][c].signalDirection = 'e'; // TODO
+  if (ticks % val.ticksPerBeat === 0) {
+    copy[r][c].signalDirection = 'e'; // TODO - use val.direction later
   }
 };
+
+const handleNoteAdjuster = (val, copy, r, c, ticks) => {
+  if (ticks % val.ticksPerBeat === 0) {
+    copy[r][c].signalDirection = 's';
+  }
+}
 
 const setNextSignals = (todoSignals, copy, r, c) => {
   switch (copy[r][c].signalDirection) {
@@ -98,12 +99,13 @@ function Matrix() {
     for (let r = 0; r < Constants.MATRIX_LENGTH; r++) {
       for (let c = 0; c < Constants.MATRIX_LENGTH; c++) {
         setNextSignals(todoSignals, copy, r, c);
-
-        const val = copy[r][c].val.toLowerCase();
-        const type = val.charAt(0);
-        switch (type) {
-          case 'm':
-            handleMetronome(val, copy, r, c, ticks);
+        
+        switch (copy[r][c].type) {
+          case 'metronome':
+            handleMetronome(copy[r][c].val, copy, r, c, ticks);
+            break;
+          case 'noteAdjuster':
+            handleNoteAdjuster(copy[r][c].val, copy, r, c, ticks)
             break;
         }
       }
@@ -115,63 +117,80 @@ function Matrix() {
       copy[r][c].signalDirection = dir;
 
       // Play sounds
-      const val = copy[r][c].val;
-      const type = val.charAt(0).toLowerCase();
-      let octave = 4;
-      if (val.length == 2) {
-        octave = val.charAt(1);
+      if (copy[r][c].type === 'note' && copy[r][c].signalDirection !== '') {
+        const val = copy[r][c].val;
+        const synth = new Tone.Synth().toDestination(); // TODO: use polysynth
+        synth.triggerAttackRelease(val.note.toUpperCase() + val.octave, '4n'); // TODO: need variable note lengths
       }
-  if (type.match(/[a-g]/i) && copy[r][c].signalDirection !== '') {
-    const synth = new Tone.Synth().toDestination();
-    synth.triggerAttackRelease(type.toUpperCase() + octave, '4n'); // TODO: temporary note !!!!!!!!!!!!!!!! #anshulshah
-  }
-}
+    }
 
-setMatrix(copy);
+    setMatrix(copy);
   };
 
-const handleMatrixChange = (row, column, value) => {
-  if (row < 0 || row > Constants.MATRIX_LENGTH || column < 0 || column > Constants.MATRIX_LENGTH)
-    return;
-  let copy = [...matrix];
-  copy[row][column] = value;
-  setMatrix(copy);
-};
+  const handleMatrixChange = (row, column, value) => {
+    if (row < 0 || row >= Constants.MATRIX_LENGTH || column < 0 || column >= Constants.MATRIX_LENGTH)
+      return;
+    let copy = [...matrix];
+    copy[row][column] = value;
+    setMatrix(copy);
+  };
 
   useKeyDown((c) => {
-  let newCell = matrix[selectedRow][selectedColumn];
-    if (newCell.val.length > 0 && (/^\d$/).test(c) &&
-      (newCell.val.charAt(0).toLowerCase().match(/[a-g]/i) ||
-        newCell.val.charAt(0).toLowerCase() === 'm')) {
-    newCell.val = newCell.val.charAt(0) + c;
-  } else if (c.match(/[a-z]/i) && c.length == 1) {
-    newCell.val = c;
-  } else if (c.toLowerCase() === 'backspace') {
-    newCell.val = '';
-  }
-  handleMatrixChange(selectedRow, selectedColumn, newCell);
-});
+    let newCell = matrix[selectedRow][selectedColumn];
+    c = c.toLowerCase();
+    if (c === 'backspace') { // Special character: backspace
+      newCell.type = '';
+      newCell.val = {};
+    } else if (c.length === 1) {
+      if (!isNaN(c)) { // Single-char number
+        if (newCell.type === 'note') {
+          newCell.val.octave = parseInt(c);
+        } else if (newCell.type === 'metronome') {
+          newCell.val.ticksPerBeat = parseInt(c);
+        }
+      } else { // Single-char alphabet
+        if (c.match(/[a-g]/i)) {
+          newCell.type = 'note';
+          newCell.val = {
+            note: c,
+            octave: 4,
+            accidental: '',
+          };
+        } else if (c === 'm') {
+          newCell.type = 'metronome';
+          newCell.val = {
+            ticksPerBeat: 4,
+          };
+        } else if (c === 'n') {
+          newCell.type = 'noteAdjuster';
+          newCell.val = {
+            ticksPerBeat: 4,
+          };
+        }
+      }
+    }
 
-useInterval(() => { // Main clock function, BPM later set by user TODO
-  handleMatrixUpdate();
-  setTicks(ticks + 1);
-}, Constants.MS_PER_TICK);
+    handleMatrixChange(selectedRow, selectedColumn, newCell);
+  });
 
-return (
-  <>
-    <MatrixTable
-      matrix={matrix}
-      selectedRow={selectedRow}
-      selectedColumn={selectedColumn}
-      handleClickCell={(r, c) => {
-        setSelectedRow(r);
-        setSelectedColumn(c);
-      }}
-    />
-  </>
-);
+  useInterval(() => { // Main clock function, BPM later set by user TODO
+    handleMatrixUpdate();
+    setTicks(ticks + 1);
+  }, Constants.MS_PER_TICK);
+
+  return (
+    <>
+      <MatrixTable
+        matrix={matrix}
+        selectedRow={selectedRow}
+        selectedColumn={selectedColumn}
+        handleClickCell={(r, c) => {
+          setSelectedRow(r);
+          setSelectedColumn(c);
+        }}
+      />
+    </>
+  );
 };
-
-
 
 export default Matrix;
