@@ -1,16 +1,15 @@
 import './App.css';
 import React from 'react';
 import Matrix from './Matrix.jsx';
-import * as Constants from './utils/Constants.jsx';
 import { socket } from './contexts/Socket.jsx';
 
-const Slider = ({ delay, handleChange, handlePointerUpCapture }) => {
+const Slider = ({ delay, minDelay, maxDelay, handleChange, handlePointerUpCapture }) => {
   return (
     <form onPointerUpCapture={handlePointerUpCapture}>
       <input
         type='range'
-        min={Constants.MIN_MS_PER_TICK}
-        max={Constants.MAX_MS_PER_TICK}
+        min={minDelay}
+        max={maxDelay}
         step='50'
         value={delay}
         onChange={e => handleChange(e.target.value)}
@@ -20,10 +19,14 @@ const Slider = ({ delay, handleChange, handlePointerUpCapture }) => {
 };
 
 function App() {
-  const [delay, setDelay] = React.useState(Constants.DEFAULT_MS_PER_TICK);
+  const [delay, setDelay] = React.useState(-1);
+  const [minDelay, setMinDelay] = React.useState(-1);
+  const [maxDelay, setMaxDelay] = React.useState(-1);
 
-  const handleDelayChanged = (newDelay) => {
+  const handleDelayChanged = ({ newDelay, newMinDelay, newMaxDelay }) => {
     setDelay(newDelay);
+    setMinDelay(newMinDelay);
+    setMaxDelay(newMaxDelay);
   };
 
   React.useEffect(() => {
@@ -34,17 +37,22 @@ function App() {
   const handlePointerUpCapture = () => {
     socket.emit('requestDelayChange', { roomCode: 1234, newDelay: delay });
   };
-
-  // TODO - add back when server side implements adjustable delay socket.io emits
+  
   return (
     <>
       <h1 id='title'>Echolocation</h1>
-      <Slider
-        delay={delay}
-        handleChange={(newDelay) => setDelay(newDelay)}
-        handlePointerUpCapture={handlePointerUpCapture}
-      />
-      <p>Update delay: {delay} ms</p>
+      { delay !== -1 && minDelay !== -1 && maxDelay !== -1 && 
+        <>
+          <Slider
+            delay={delay}
+            minDelay={minDelay}
+            maxDelay={maxDelay}
+            handleChange={(newDelay) => setDelay(newDelay)}
+            handlePointerUpCapture={handlePointerUpCapture}
+          />
+          <p>Update delay: {delay} ms</p>
+        </>
+      }
       <br />
       <br />
       <Matrix />
@@ -52,4 +60,4 @@ function App() {
   )
 }
 
-export default App
+export default App;

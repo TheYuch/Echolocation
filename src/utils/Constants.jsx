@@ -1,8 +1,3 @@
-export const MIN_MS_PER_TICK = 200; // TODO import from server
-export const DEFAULT_MS_PER_TICK = 500;
-export const MAX_MS_PER_TICK = 1000;
-export const MATRIX_LENGTH = 16; // TODO import from server
-
 export const CELL_NOTE_COLORS = {
     // roygbiv
     a: '#F10000',
@@ -18,14 +13,3 @@ export const CELL_SIGNAL_COLORS = {
     noteAdjuster: 'rgba(173, 143, 52, 0.4)' // gold
 };
 export const CELL_SELECT_COLOR = 'lightblue'; // TODO make it flash
-
-export const CELL_NOTE_DEFAULT_OCTAVE = 4;
-export const CELL_NOTE_DEFAULT_INSTRUMENT = 'synth';
-export const CELL_NOTE_INSTRUMENTS = ['amsynth', 'duosynth', 'fmsynth', 'membranesynth', 'metalsynth', 'monosynth', 'noisesynth', 'plucksynth', 'synth'];
-
-export const CELL_METRONOME_DEFAULT_TICKSPERBEAT = 4;
-
-export const CELL_NOTEADJUSTER_DEFAULT_TICKSPERBEAT = 4;
-
-export const NOTES_WITH_SHARPS = ["C", "D", "F", "G", "A"];
-export const NOTES_WITH_FLATS = ["D", "E", "G", "A", "B"];
